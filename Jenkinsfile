@@ -1,23 +1,27 @@
 pipeline {
   agent any
 
+  options {
+    buidDiscarder(logRotator(numToKeepStr: '2', artifactNumToKeepStr: '1'))
+  }
+
   stages {
+    stage('Unit Tests') {
+      steps {
+        sh 'ant -f test.xml -v'
+        junit 'reports/result.xml'
+      }
+    }
     stage('build') {
       steps {
-        sh 'javac -d . src/*java'
-        sh 'echo Main-Class: Rectangulator > MANIFEST.MF'
-        sh 'jar -cvmf MANIFEST.MF rectangle.jar *.class'
-      }
-    }
-    stage('run') {
-      steps {
-        sh 'java -jar rectangle.jar 7 9'
+        sh 'ant -f build.xml'
       }
     }
   }
+
   post {
-    success {
-      archiveArtifacts artifacts: 'rectangle.jar', fingerprint: true
+    always {
+      archiveArtifacts artifacts: 'dist/*.jar', fingerprint: true
     }
   }
-}      
+}
